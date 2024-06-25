@@ -1,2 +1,2 @@
 # PE
-Microsoft Portable Executable format notes and accompanying example code
+Microsoft Portable Executable format notes and accompanying example code.
