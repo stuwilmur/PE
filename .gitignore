@@ -3,3 +3,10 @@
 ################################################################################
 
 /.vs*
+/x64
+/PeApp/x64/Debug
+/PeDll/x64/Debug
+/PeLib/x64/Debug
+/PeApp/PeApp.vcxproj.user
+/PeDll/PeDll.vcxproj.user
+/PeLib/PeLib.vcxproj.user
