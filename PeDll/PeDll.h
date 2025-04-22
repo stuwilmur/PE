@@ -1,5 +1,9 @@
 #pragma once
 
+#include <windows.h>
+#include <winnt.h>
+#include <stdio.h>
+
 #ifdef PEDLL_EXPORTS
 #define PEDLL_API __declspec(dllexport)
 #else
@@ -7,3 +11,4 @@
 #endif
 
 extern "C" PEDLL_API void fn();
+extern "C" PEDLL_API _IMAGE_DOS_HEADER read_dos_header(FILE* pe_file);

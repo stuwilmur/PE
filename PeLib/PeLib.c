@@ -2,10 +2,11 @@
 //
 
 #include "pch.h"
-#include "framework.h"
 #include "PeLib.h"
 
-// TODO: This is an example of a library function
+/**
+ * \brief An example of a C library function
+ */
 void fnPeLib()
 {
 }
