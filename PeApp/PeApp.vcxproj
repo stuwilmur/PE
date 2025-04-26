@@ -135,12 +135,16 @@
   <ItemGroup>
     <ClCompile Include="AppUtils.cpp" />
     <ClCompile Include="AppUtils.h" />
+    <ClCompile Include="Explore.cpp" />
     <ClCompile Include="PeApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PeDll\PeDll.vcxproj">
       <Project>{39e8e55d-7405-4b57-8969-a1acbfd56cc4}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Explore.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

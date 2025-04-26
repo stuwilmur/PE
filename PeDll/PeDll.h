@@ -1,6 +1,6 @@
 #pragma once
 
-#include <windows.h>
+#include <windows.h> // necessary, even though VS suggests it may not be
 #include <winnt.h>
 #include <stdio.h>
 
