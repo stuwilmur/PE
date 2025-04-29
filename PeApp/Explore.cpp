@@ -1,8 +1,8 @@
 #include <sstream>
+#include <vector>
 
 #include "PeDll.h"
 #include "AppUtils.h"
-
 #include "Explore.h"
 
 constexpr int MAX_BUF_LENGTH = 4096;
@@ -34,4 +34,8 @@ void explore()
 
     _IMAGE_DOS_HEADER dos_header = read_dos_header(file);
     dos_header = dos_header;
+
+    std::vector<RICH_HEADER_ENTRY> rich_header(200); //!! replace 200
+    ULONGLONG number_of_header_entries = read_rich_header(file, rich_header.data(), 200);
+    rich_header.resize(number_of_header_entries);
 }

@@ -49,8 +49,7 @@ namespace app_utils {
         // space for the new string isn't an error, but having
         // insufficient space is a potential security problem.
         const size_t newsize = origsize * 2;
-        std::vector<char> char_vec;
-        char_vec.reserve(newsize);
+        std::vector<char> char_vec(newsize);
 
         // Put a copy of the converted string into char_vec
         if (wcstombs_s(&convertedChars, char_vec.data(), newsize, buffer, _TRUNCATE) != 0)
