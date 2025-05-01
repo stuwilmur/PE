@@ -6,6 +6,7 @@
 #include "Explore.h"
 
 constexpr int MAX_BUF_LENGTH = 4096;
+constexpr int MAX_RICH_HEADER_ENTRIES = 100;
 
 /**
  * \brief Explore the PE file
@@ -35,7 +36,14 @@ void explore()
     _IMAGE_DOS_HEADER dos_header = read_dos_header(file);
     dos_header = dos_header;
 
-    std::vector<RICH_HEADER_ENTRY> rich_header(200); //!! replace 200
-    ULONGLONG number_of_header_entries = read_rich_header(file, rich_header.data(), 200);
+    std::vector<RICH_HEADER_ENTRY> rich_header(MAX_RICH_HEADER_ENTRIES);
+    ULONGLONG number_of_header_entries = read_rich_header(file, rich_header.data(), MAX_RICH_HEADER_ENTRIES);
     rich_header.resize(number_of_header_entries);
+
+    if (fclose(file) != 0)
+    {
+        std::stringstream ss;
+        ss << "Failed to close file " << file_name_string;
+        throw std::runtime_error(ss.str());
+    }
 }

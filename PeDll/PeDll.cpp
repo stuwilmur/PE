@@ -35,7 +35,7 @@ _IMAGE_DOS_HEADER read_dos_header(FILE* pe_file)
 }
 
 /**
- * \brief Read the DOS header from a file
+ * \brief Read the Rich header from a file
  * \param pe_file File pointer to the PE file to be read
  * \param buffer The buffer to populate with header entries
  * \param buffer_size The size of the buffer (number of header entries)
@@ -130,11 +130,11 @@ ULONGLONG read_rich_header(FILE* pe_file, RICH_HEADER_ENTRY* buffer, int buffer_
     {
         RICH_HEADER_ENTRY entry = {};
 
-        entry.product = *it++;
-        entry.product |= *it++ << BYTE;
-
         entry.build = *it++;
         entry.build |= *it++ << BYTE;
+
+        entry.product = *it++;
+        entry.product |= *it++ << BYTE;
 
         entry.count = *it++;
         entry.count |= *it++ << BYTE;
