@@ -11,22 +11,31 @@
  * \param offset Offset
  */
 void safe_seek(FILE* file, off_t offset) {
-    if (fseek(file, 0, SEEK_END) != 0)
-    {
+    if (!file) {
+        throw std::invalid_argument("Invalid file pointer");
+    }
+
+    // Get the length of the file
+    if (fseek(file, 0, SEEK_END) != 0) {
         throw std::runtime_error("Can't seek to end of file");
     }
     off_t file_length = ftell(file);
+    if (file_length == -1) {
+        throw std::runtime_error("Can't determine file length");
+    }
 
-    if (file_length < offset) {
+    // Check if the offset is beyond the end of the file
+    if (offset > file_length) {
         std::stringstream ss;
         ss << "Can't seek: offset=" << offset << " is greater than file length=" << file_length;
         throw std::runtime_error(ss.str());
     }
 
-    if (fseek(file, offset, SEEK_SET) != 0)
-    {
+    // Seek to the specified offset
+    if (fseek(file, offset, SEEK_SET) != 0) {
         std::stringstream ss;
         ss << "Can't seek: offset=" << offset;
         throw std::runtime_error(ss.str());
     }
 }
+
