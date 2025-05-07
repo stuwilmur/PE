@@ -24,8 +24,8 @@ ExampleDll is a very simple DLL, which we can use as a test input for our PE par
 ## PeClient
 This is the main application, which will open, read and parse our ExampleDll DLL. As such, it includes the application entry point `main` function.
 ### Header files
-- **AppUtils.h** declares utility functions that are application-specific. This saves bloating PeDll with functions that it doesn't need;
-- **Explore.h** functions for exploring the PE file.
+- **AppUtils.h** declares utility functions (within the namespace `app_utils`) which are application-specific. This saves bloating PeDll with functions that it doesn't need;
+- **Explore.h** functions for exploring the PE file (namespace `explore`).
 ### Source files
 - **AppUtils.cpp** defines the utility functions;
 - **Explore.cpp** defines the exploratory functions;
@@ -37,7 +37,7 @@ This DLL exposes all the functions which we will develop to parse PE files. As s
 - **framework.h** declares standard Windows stuff;
 - **pch.h** declares standard precompiled headers stuff;
 - **PeDll.h** declares all the DLL's exposed functions, each suitably declared `extern "C" __declspec(dllexport)`. This is where we will declare all the the interface functions which clients can use to read and parse PE files;
-- **Utils.h** delcares a set of utlity functions for reading and parsing PE files.
+- **Utils.h** delcares a set of utlity functions (declared in the namespace `utils`) for reading and parsing PE files.
 ### Source files
 - **dllmain.cpp** defines the standard DLL entry point function, `DllMain`;
 - **pch.cpp** is necessary for the precompiled header stuff in pch.h to compile;

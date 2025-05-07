@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <windows.h> // necessary, even though VS suggests it may not be
 #include <winnt.h>
 #include <stdio.h>
@@ -17,6 +18,7 @@ struct RICH_HEADER_ENTRY
     DWORD count;
 };
 
-extern "C" PEDLL_API void fn();
-extern "C" PEDLL_API _IMAGE_DOS_HEADER read_dos_header(FILE* pe_file);
-extern "C" PEDLL_API ULONGLONG read_rich_header(FILE* pe_file, RICH_HEADER_ENTRY* buffer, int buffer_size);
+PEDLL_API void fn();
+PEDLL_API _IMAGE_DOS_HEADER read_dos_header(FILE* pe_file);
+PEDLL_API size_t read_dos_stub(FILE* pe_file, uint8_t* buffer, size_t buffer_size);
+PEDLL_API size_t read_rich_header(FILE* pe_file, RICH_HEADER_ENTRY* buffer, size_t buffer_size);

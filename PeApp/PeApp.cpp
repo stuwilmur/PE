@@ -9,7 +9,7 @@
  */
 int main()
 {
-    explore();
+    explore::explore_pe();
 
     return 0;
 }

@@ -1,20 +1,24 @@
 
 #include "AppUtils.h"
+
+#include <iomanip>
+#include <iostream>
 #include <PathCch.h>
 #include <libloaderapi.h>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 #include <string>
 
 namespace app_utils {
     /**
-     * \brief Get the absolute path of a file that is located in the
-     * same directory as the currently executing module
-     * \param buffer String buffer that will hold the generated absolute path
-     * \param file_name The name of the file
-     * \param buffer_length Length of buffer
-     * \return 0 if no error, otherwise 1
-     */
+     * \brief Get the absolute path of a file that is located in the
+     * same directory as the currently executing module
+     * \param buffer String buffer that will hold the generated absolute path
+     * \param file_name The name of the file
+     * \param buffer_length Length of buffer
+     * \return 0 if no error, otherwise 1
+     */
     int get_abs_path_from_filename(WCHAR* buffer, const WCHAR* file_name, DWORD buffer_length)
     {
         // Get the full absolute path of the current module
@@ -59,6 +63,43 @@ namespace app_utils {
         }
 
         // Return a string created from the vector
-        return std::string(char_vec.data());
+        return { char_vec.data() };
+    }
+
+    /**
+     * \brief Output a set of bytes in either ASCII or hex
+     * \param buffer Pointer to vector of bytes
+     * \param format Format specifier
+     */
+    void dump_bytes(std::vector<uint8_t>* buffer, DumpFormat format)
+    {
+        std::stringstream ss;
+        int byte_count = 0;
+        for (const auto byte : *buffer)
+        {
+            constexpr int LINE_LENGTH = 16;
+            if (byte_count % LINE_LENGTH == 0)
+            {
+                ss << std::hex << byte_count << "\t|\t";
+            }
+            if (format == HexFormat || !isprint(byte))
+            {
+                ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+            }
+            else
+            {
+                ss << std::setw(2) << std::setfill(' ') << static_cast<char>(byte);
+            }
+            if (byte_count % LINE_LENGTH == LINE_LENGTH - 1)
+            {
+                ss << "\n";
+            }
+            else
+            {
+                ss << " ";
+            }
+            byte_count++;
+        }
+        std::cout << ss.str();
     }
 }
