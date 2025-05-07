@@ -37,5 +37,6 @@ The function `explore::explore` opens the file before calling `explore::explore_
 
 
 Finally, `explore::explore_dos_header` calls `read_dos_header`, and prints the only two values that are of real interest: the magic number and the offset to the start of the Windows NT headers.
+
 ![Output from explore_dos_header](img/explore_dos_header.PNG "Output from explore_dos_header")
 
