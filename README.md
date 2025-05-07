@@ -4,7 +4,7 @@ The PE (Portable Executable) format is used by executables, object code, dynamic
 
 ## Contents
 1. [Project code overview](./Docs/Project/project.md)
-1. [DOS header](./Docs/Dos_Header/_dos_header.md)
+1. [DOS header](./Docs/Dos_Header/dos_header.md)
 1. [DOS stub and Rich header](./Docs/Dos_Stub_Rich_Header/dos_stub_rich_header.md)
 
 
