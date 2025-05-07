@@ -15,7 +15,7 @@ We read the bytes with [`fread_s`](https://learn.microsoft.com/en-us/cpp/c-runti
 ## Exploring the file 
 The function `explore::explore` is where we will open the ExampleDll.dll file and then call some helper functions to explore each part in turn. Opening the file actually presents a little challenge, as we need to pass *the path to this file* as an argument to [`fopen_s`](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-s-wfopen-s?view=msvc-170) (which is a secure version of [`fopen`](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-wfopen?view=msvc-170)).
 The ExampleDll appears in the same build directory as the application executable:\
-![Build directory listing](img/build_directory.png "Build directory listing")\
+![Build directory listing](img/build_directory.PNG "Build directory listing")\
 This gives us a strategy for getting the full path of ExampleDll:
 1. have the executable get the full path of itself, i.e. the exectuable file of the current process;
 1. strip the filename from the path;
@@ -28,7 +28,7 @@ To do this, we create a little utility function `app_utils::_get_abs_path_from_f
 1. [`PathCchAppend`](https://learn.microsoft.com/en-us/windows/win32/api/pathcch/nf-pathcch-pathcchappend) appends one path to the end of another.
 
 Note that the last two functions are defined in the static library pathcch.lib, so we must add this as a linker input to PeClient.
-![PeClient linker input](img/pe_client_linker_input.png "PeClient linker input")
+![PeClient linker input](img/pe_client_linker_input.PNG "PeClient linker input")
 
 Phew!
 
@@ -37,5 +37,5 @@ The function `explore::explore` opens the file before calling `explore::explore_
 
 
 Finally, `explore::explore_dos_header` calls `read_dos_header`, and prints the only two values that are of real interest: the magic number and the offset to the start of the Windows NT headers.
-![Output from explore_dos_header](img/explore_dos_header.png "Output from explore_dos_header")
+![Output from explore_dos_header](img/explore_dos_header.PNG "Output from explore_dos_header")
 
