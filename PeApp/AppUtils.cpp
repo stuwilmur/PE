@@ -19,7 +19,7 @@ namespace app_utils {
      * \param buffer_length Length of buffer
      * \return 0 if no error, otherwise 1
      */
-    int get_abs_path_from_filename(WCHAR* buffer, const WCHAR* file_name, DWORD buffer_length)
+    int get_abs_path_from_filename(WCHAR* buffer, const WCHAR* file_name, const DWORD buffer_length)
     {
         // Get the full absolute path of the current module
         if (GetModuleFileName(nullptr, buffer, buffer_length) == 0)
@@ -37,10 +37,10 @@ namespace app_utils {
     }
 
     /**
-     * \brief Convert a buffer of WCHAR to a std::string
-     * \param buffer Buffer to convert
-     * \return The resulting converted string
-     */
+     * \brief Convert a buffer of WCHAR to a std::string
+     * \param buffer Buffer to convert
+     * \return The resulting converted string
+     */
     std::string wchar_t_buffer_to_string(const WCHAR* buffer)
     {
         if (!buffer)
@@ -56,8 +56,8 @@ namespace app_utils {
         std::vector<char> char_vec(newsize);
 
         // Convert the wide-character string to a multibyte string
-        size_t convertedChars = 0;
-        if (wcstombs_s(&convertedChars, char_vec.data(), newsize, buffer, _TRUNCATE) != 0)
+        size_t converted_chars = 0;
+        if (wcstombs_s(&converted_chars, char_vec.data(), newsize, buffer, _TRUNCATE) != 0)
         {
             throw std::runtime_error("wcstombs_s failed to convert buffer of wchar_t");
         }
@@ -71,7 +71,7 @@ namespace app_utils {
      * \param buffer Pointer to vector of bytes
      * \param format Format specifier
      */
-    void dump_bytes(std::vector<uint8_t>* buffer, DumpFormat format)
+    void dump_bytes(const std::vector<uint8_t>* buffer, const dump_format format)
     {
         std::stringstream ss;
         int byte_count = 0;
@@ -82,7 +82,7 @@ namespace app_utils {
             {
                 ss << std::hex << byte_count << "\t|\t";
             }
-            if (format == HexFormat || !isprint(byte))
+            if (format == hex_format || !isprint(byte))
             {
                 ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
             }

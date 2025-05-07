@@ -12,7 +12,7 @@ namespace utils
      * \param file File pointer of file in which to seek
      * \param offset Offset
      */
-    void safe_seek(FILE* file, off_t offset) {
+    void safe_seek(FILE* file, const off_t offset) {
         if (!file) {
             throw std::invalid_argument("Invalid file pointer");
         }

@@ -6,13 +6,13 @@
 
 namespace app_utils
 {
-    enum DumpFormat
+    enum dump_format
     {
-        HexFormat,
-        AsciiFormat
+        hex_format,
+        ascii_format
     };
 
     int get_abs_path_from_filename(WCHAR*, const WCHAR*, DWORD);
     std::string wchar_t_buffer_to_string(const WCHAR*);
-    void dump_bytes(std::vector<uint8_t>* buffer, DumpFormat format);
+    void dump_bytes(const std::vector<uint8_t>* buffer, dump_format format);
 }

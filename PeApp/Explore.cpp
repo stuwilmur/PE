@@ -86,9 +86,9 @@ namespace explore
         dos_stub.resize(dos_stub_length);
 
         std::cout << "\n\nDOS stub (ASCII):\n";
-        app_utils::dump_bytes(&dos_stub, app_utils::AsciiFormat);
+        dump_bytes(&dos_stub, app_utils::ascii_format);
         std::cout << "\n\nDOS stub (hex):\n";
-        app_utils::dump_bytes(&dos_stub, app_utils::HexFormat);
+        dump_bytes(&dos_stub, app_utils::hex_format);
     }
 
     /**
@@ -110,9 +110,9 @@ namespace explore
         ss << "\n\nRich header entries info:\n";
         for (const auto entry : rich_header)
         {
-            ss << "product: " << std::setw(2 * sizeof(RICH_HEADER_ENTRY::product))
+            ss << "product: " << std::setw(2 * sizeof RICH_HEADER_ENTRY::product)
             << std::setfill('0') << std::hex << entry.product << "\t"
-            << "build: " << std::setw(2 * sizeof(RICH_HEADER_ENTRY::build))
+            << "build: " << std::setw(2 * sizeof RICH_HEADER_ENTRY::build)
             << std::setfill('0') << std::hex << entry.build << "\t"
             << "count: " << entry.count << "\n";
         }

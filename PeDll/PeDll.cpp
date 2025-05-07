@@ -28,7 +28,7 @@ void fn()
 _IMAGE_DOS_HEADER read_dos_header(FILE* pe_file)
 {
     utils::safe_seek(pe_file, 0);
-    _IMAGE_DOS_HEADER dos_header = _IMAGE_DOS_HEADER();
+    auto dos_header = _IMAGE_DOS_HEADER();
     if (fread_s(&dos_header, sizeof(_IMAGE_DOS_HEADER), sizeof(_IMAGE_DOS_HEADER), 1, pe_file) != 1)
     {
         throw std::runtime_error("Can't read DOS header");
@@ -46,7 +46,7 @@ _IMAGE_DOS_HEADER read_dos_header(FILE* pe_file)
  * \param buffer_size The size of the buffer (number of bytes)
  * \return The number of bytes copied into the buffer
  */
-size_t read_dos_stub(FILE* pe_file, uint8_t* buffer, size_t buffer_size)
+size_t read_dos_stub(FILE* pe_file, uint8_t* buffer, const size_t buffer_size)
 {
     const _IMAGE_DOS_HEADER dos_header = read_dos_header(pe_file);
     constexpr long start_offset = sizeof(_IMAGE_DOS_HEADER);
