@@ -102,4 +102,21 @@ namespace app_utils {
         }
         std::cout << ss.str();
     }
+
+    /**
+     * \brief Format a UNIX timestamp as a string
+     * \param time Timestamp
+     * \return Datetime string
+     */
+    std::string format_unix_timestamp(time_t time)
+    {
+        char formatted_time[100];
+
+        const size_t result = ctime_s(formatted_time, sizeof(formatted_time), &time);
+
+        if (result == 0) {
+            return { formatted_time };
+        }
+        throw std::runtime_error("Error formatting timestamp");
+    }
 }

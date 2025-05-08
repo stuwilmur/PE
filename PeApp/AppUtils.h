@@ -15,4 +15,5 @@ namespace app_utils
     int get_abs_path_from_filename(WCHAR*, const WCHAR*, DWORD);
     std::string wchar_t_buffer_to_string(const WCHAR*);
     void dump_bytes(const std::vector<uint8_t>* buffer, dump_format format);
+    std::string format_unix_timestamp(time_t time);
 }

@@ -213,3 +213,97 @@ size_t read_rich_header(FILE* pe_file, RICH_HEADER_ENTRY* buffer, size_t buffer_
     std::copy(parsed_header_data.begin(), parsed_header_data.end(), buffer);
     return parsed_header_data.size();
 }
+
+/**
+ * \brief Read the NT headers of a 32-bit PE file
+ * \param pe_file File pointer to the PE file to be read
+ * \return NT headers structure
+ */
+PEDLL_API IMAGE_NT_HEADERS32 read_nt_headers_32(FILE* pe_file)
+{
+    if (!pe_file)
+    {
+        throw std::invalid_argument("Invalid file pointer or buffer");
+    }
+
+    if (get_pe_type(pe_file) != PE32)
+    {
+        throw std::runtime_error("File is not a 32-bit PE file");
+    }
+
+    const _IMAGE_DOS_HEADER dos_header = read_dos_header(pe_file);
+    utils::safe_seek(pe_file, dos_header.e_lfanew);
+    IMAGE_NT_HEADERS32 nt_headers32;
+    if (fread_s(&nt_headers32, sizeof nt_headers32, sizeof nt_headers32, 1, pe_file) != 1)
+    {
+        throw std::runtime_error("Can't read NT header");
+    }
+    return nt_headers32;
+}
+
+/**
+ * \brief Read the NT headers of a 64-bit PE file
+ * \param pe_file File pointer to the PE file to be read
+ * \return NT headers structure
+ */
+PEDLL_API IMAGE_NT_HEADERS64 read_nt_headers_64(FILE* pe_file)
+{
+    if (!pe_file)
+    {
+        throw std::invalid_argument("Invalid file pointer or buffer");
+    }
+
+    if (get_pe_type(pe_file) != PE64)
+    {
+        throw std::runtime_error("File is not a 64-bit PE file");
+    }
+
+    const _IMAGE_DOS_HEADER dos_header = read_dos_header(pe_file);
+    utils::safe_seek(pe_file, dos_header.e_lfanew);
+    IMAGE_NT_HEADERS64 nt_headers64;
+    if (fread_s(&nt_headers64, sizeof nt_headers64, sizeof nt_headers64 , 1, pe_file) != 1)
+    {
+        throw std::runtime_error("Can't read NT header");
+    }
+    return nt_headers64;
+}
+
+/**
+ * \brief Return the type (32- or 64-bit) of a PE file
+ * \param pe_file File pointer to the PE file to be read
+ * \return Type of the file
+ */
+PE_TYPE get_pe_type(FILE* pe_file)
+{
+    if (!pe_file)
+    {
+        throw std::invalid_argument("Invalid file pointer or buffer");
+    }
+
+    const _IMAGE_DOS_HEADER dos_header = read_dos_header(pe_file);
+    const off_t magic_offset = (long)dos_header.e_lfanew + sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER);
+
+    utils::safe_seek(pe_file, magic_offset);
+    WORD magic;
+    if (fread_s(&magic, sizeof magic, sizeof magic, 1, pe_file) != 1)
+    {
+        throw std::runtime_error("Can't read Optional header magic number");
+    }
+
+    constexpr WORD PE32_MAGIC = 0x10b;
+    constexpr WORD PE64_MAGIC = 0x20b;
+
+    PE_TYPE pe_type;
+    switch (magic)
+    {
+    case PE32_MAGIC:
+        pe_type = PE32;
+        break;
+    case PE64_MAGIC:
+        pe_type = PE64;
+        break;
+    default:
+        throw std::runtime_error("Unrecognised magic number in Optional header: unknown PE type");
+    }
+    return pe_type;
+}
