@@ -16,4 +16,5 @@ namespace app_utils
     std::string wchar_t_buffer_to_string(const WCHAR*);
     void dump_bytes(const std::vector<uint8_t>* buffer, dump_format format);
     std::string format_unix_timestamp(time_t time);
+    FILE* open_local_file(const WCHAR* fileName);
 }

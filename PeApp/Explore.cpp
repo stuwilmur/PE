@@ -9,7 +9,6 @@
 #include <iostream>
 #include <map>
 
-constexpr int MAX_BUF_LENGTH = 4096;
 constexpr int MAX_DOS_STUB_SIZE = 256;
 constexpr int MAX_RICH_HEADER_ENTRIES = 100;
 
@@ -66,44 +65,85 @@ const std::map<WORD, const char*> CHARACTERISTICS_DESCRIPTIONS = {
     { IMAGE_FILE_BYTES_REVERSED_HI      , "Bytes of machine word are reversed"}
 };
 
+const std::map<WORD, const char*> SUBSYSTEM_DESCIRPTIONS = {
+    {IMAGE_SUBSYSTEM_UNKNOWN                 , "Unknown subsystem"},
+    {IMAGE_SUBSYSTEM_NATIVE                  , "Image doesn't require a subsystem"},
+    {IMAGE_SUBSYSTEM_WINDOWS_GUI             , "Image runs in the Windows GUI subsystem"},
+    {IMAGE_SUBSYSTEM_WINDOWS_CUI             , "Image runs in the Windows character subsystem"},
+    {IMAGE_SUBSYSTEM_OS2_CUI                 , "Image runs in the OS/2 character subsystem"},
+    {IMAGE_SUBSYSTEM_POSIX_CUI               , "Image runs in the Posix character subsystem"},
+    {IMAGE_SUBSYSTEM_NATIVE_WINDOWS          , "Image is a native Win9x driver"},
+    {IMAGE_SUBSYSTEM_WINDOWS_CE_GUI          , "Image runs in the Windows CE subsystem"},
+    {IMAGE_SUBSYSTEM_EFI_APPLICATION         , "EFI application"},
+    {IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER , "EFI boot service driver"},
+    {IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER      , "EFI runtime driver"},
+    {IMAGE_SUBSYSTEM_EFI_ROM                 , "EFI ROM"},
+    {IMAGE_SUBSYSTEM_XBOX                    , "XBOX"},
+    {IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION, "Windows boot application"},
+    {IMAGE_SUBSYSTEM_XBOX_CODE_CATALOG       , "XBOX code catalog"},
+};
+
+const std::map<WORD, const char*> DLL_CHARACTERISTICS_DESCIRPTIONS = {
+    {IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA       , "Image can handle a high entropy 64-bit virtual address space."},
+    {IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE          , "DLL can move"},
+    {IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY       , "Code Integrity Image"},
+    {IMAGE_DLLCHARACTERISTICS_NX_COMPAT             , "Image is NX compatible"},
+    {IMAGE_DLLCHARACTERISTICS_NO_ISOLATION          , "Image understands isolation and doesn't want it"},
+    {IMAGE_DLLCHARACTERISTICS_NO_SEH                , "Image does not use SEH.  No SE handler may reside in this image"},
+    {IMAGE_DLLCHARACTERISTICS_NO_BIND               , "Do not bind this image"},
+    {IMAGE_DLLCHARACTERISTICS_APPCONTAINER          , "Image should execute in an AppContainer"},
+    {IMAGE_DLLCHARACTERISTICS_WDM_DRIVER            , "Driver uses WDM model"},
+    {IMAGE_DLLCHARACTERISTICS_GUARD_CF              , "Image supports Control Flow Guard"},
+    {IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE , "Terminal server aware"},
+};
+
+const std::map<WORD, const char*> OS_NAMES = {
+    { 100, "Windows Server 2016/2019/2022/Windows 10/100"},
+    { 63, "Windows Server 2012 R2/Windows 8.1"},
+    { 62, "Windows Server 2012/Windows 8"},
+    { 61, "Windows Server 2008 R2/Windows 7"},
+    { 60, "Windows Vista/Windows Server 2008"},
+    { 52, "Windows XP 64 - Bit Edition/Windows Server 2003"},
+    { 51, "Windows XP"},
+    { 50, "Windows 2000"},
+};
+
+const std::map<WORD, const char*> DATA_DIRECTORY_NAMES = {
+    { IMAGE_DIRECTORY_ENTRY_EXPORT        , "Export Directory"},
+    { IMAGE_DIRECTORY_ENTRY_IMPORT        , "Import Directory"},
+    { IMAGE_DIRECTORY_ENTRY_RESOURCE      , "Resource Directory" },
+    { IMAGE_DIRECTORY_ENTRY_EXCEPTION     , "Exception Directory" },
+    { IMAGE_DIRECTORY_ENTRY_SECURITY      , "Security Directory" },
+    { IMAGE_DIRECTORY_ENTRY_BASERELOC     , "Base Relocation Table" },
+    { IMAGE_DIRECTORY_ENTRY_DEBUG         , "Debug Directory" },
+    { IMAGE_DIRECTORY_ENTRY_ARCHITECTURE  , "Architecture Specific Data" },
+    { IMAGE_DIRECTORY_ENTRY_GLOBALPTR     , "RVA of GP" },
+    { IMAGE_DIRECTORY_ENTRY_TLS           , "TLS Directory" },
+    { IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG   , "Load Configuration Directory" },
+    { IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT  , "Bound Import Directory in headers" },
+    { IMAGE_DIRECTORY_ENTRY_IAT           , "Import Address Table" },
+    { IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT  , "Delay Load Import Descriptors"},
+    { IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR, "COM Runtime descriptor" },
+};
+
 namespace explore
 {
     /**
      * \brief Explore the PE file
      */
-    void explore_pe()
+    void explore_pe(FILE* file)
     {
-        FILE* file;
-        WCHAR full_file_name[MAX_BUF_LENGTH];
-        const WCHAR* dllName = L"ExampleDll.dll";
-
-        if (app_utils::get_abs_path_from_filename(full_file_name, dllName, MAX_BUF_LENGTH) != 0)
+        if (!file)
         {
-            std::stringstream ss;
-            ss << "Can't get full path of " << dllName;
-            throw std::runtime_error(ss.str());
+            throw std::invalid_argument("Invalid file pointer");
         }
 
-        const std::string file_name_string = app_utils::wchar_t_buffer_to_string(full_file_name);
-
-        if (fopen_s(&file, file_name_string.c_str(), "r") != 0)
-        {
-            std::stringstream ss;
-            ss << "Can't open file " << file_name_string;
-            throw std::runtime_error(ss.str());
-        }
+        std::cout << "PE info\n========\n\n";
 
         explore_dos_header(file);
         explore_dos_stub(file);
         explore_rich_header(file);
         explore_nt_headers(file);
-
-        if (fclose(file) != 0)
-        {
-            std::stringstream ss;
-            ss << "Failed to close file " << file_name_string;
-            throw std::runtime_error(ss.str());
-        }
     }
 
     /**
@@ -186,9 +226,13 @@ namespace explore
         case PE64:
             const IMAGE_NT_HEADERS64 nt_headers64 = read_nt_headers_64(file);
             dump_image_file_header(&nt_headers64.FileHeader);
+            std::cout << std::endl;
+            dump_image_optional_header64(&nt_headers64.OptionalHeader);
             break;
         case PE32:
-            IMAGE_NT_HEADERS32 nt_headers32 = read_nt_headers_32(file);
+            const IMAGE_NT_HEADERS32 nt_headers32 = read_nt_headers_32(file);
+            std::cout << std::endl;
+            dump_image_optional_header32(&nt_headers32.OptionalHeader);
             break;
         }
     }
@@ -215,7 +259,7 @@ namespace explore
             machine_name = "Unrecognized machine type";
         }
 
-        ss << "\nFile header\n"
+        ss << "\nFile header:\n"
             << "Machine:\t\t"
             << std::setw(2 * sizeof header->Machine) << std::setfill('0') << std::hex << header->Machine
             << "\t\t" << machine_name
@@ -236,7 +280,7 @@ namespace explore
             << "\t\t" << std::dec << header->SizeOfOptionalHeader
             << "\nCharacteristics:\t\t"
             << std::setw(2 * sizeof header->Characteristics) << std::setfill('0') << std::hex << header->Characteristics;
-        for (auto& description : get_characteristics_descriptions(header->Characteristics))
+        for (auto& description : get_characteristics_descriptions(header->Characteristics, &CHARACTERISTICS_DESCRIPTIONS))
         {
             ss << "\n\t" << description;
         }
@@ -244,21 +288,264 @@ namespace explore
     }
 
     /**
+     * \brief Pretty print the 32-bit optional header information
+     * \param header Pointer to a IMAGE_OPTIONAL_HEADER32
+     */
+    void dump_image_optional_header32(const IMAGE_OPTIONAL_HEADER32* const header)
+    {
+        if (!header)
+        {
+            throw std::invalid_argument("Invalid optional header pointer");
+        }
+        std::stringstream ss;
+
+        const char* os_name;
+        try
+        {
+            os_name = OS_NAMES.at(header->MajorOperatingSystemVersion);
+        }
+        catch (std::out_of_range&)
+        {
+            os_name = "Unrecognized OS";
+        }
+
+        const char* subsystem_description;
+        try
+        {
+            subsystem_description = SUBSYSTEM_DESCIRPTIONS.at(header->Subsystem);
+        }
+        catch (std::out_of_range&)
+        {
+            subsystem_description = "Unrecognized subsytem";
+        }
+
+        ss << "\nOptional Header:\n"
+            << "Magic:\t\t\t"
+            << std::setw(2 * sizeof header->Magic) << std::setfill('0') << std::hex << header->Magic
+            << "\t" << (header->Magic == 0x10 ? "NT32" : "NT64")
+            << "\nMajor Linker Version:\t"
+            << std::dec << static_cast<int>(header->MajorLinkerVersion)
+            << "\nMinor Linker Version:\t"
+            << std::dec << static_cast<int>(header->MinorLinkerVersion)
+            << "\nSize of Code:\t\t"
+            << std::setw(2 * sizeof header->SizeOfCode) << std::setfill('0') << std::hex << header->SizeOfCode
+            << "\nSize of Initialized Data:\t"
+            << std::setw(2 * sizeof header->SizeOfInitializedData) << std::setfill('0') << std::hex << header->SizeOfInitializedData
+            << "\nSize of Uninitialized Data:\t"
+            << std::setw(2 * sizeof header->SizeOfUninitializedData) << std::setfill('0') << std::hex << header->SizeOfUninitializedData
+            << "\nAddress of Entry Point:\t"
+            << std::setw(2 * sizeof header->AddressOfEntryPoint) << std::setfill('0') << std::hex << header->AddressOfEntryPoint
+            << "\nBase of Code:\t\t"
+            << std::setw(2 * sizeof header->BaseOfCode) << std::setfill('0') << std::hex << header->BaseOfCode
+            << "\nBase of Data:\t\t"
+            << std::setw(2 * sizeof header->BaseOfData) << std::setfill('0') << std::hex << header->BaseOfData
+            << "\nImage Base:\t\t"
+            << std::setw(2 * sizeof header->ImageBase) << std::setfill('0') << std::hex << header->ImageBase
+            << "\nSection Alignment:\t"
+            << std::setw(2 * sizeof header->SectionAlignment) << std::setfill('0') << std::hex << header->SectionAlignment
+            << "\nFile Alignment:\t\t"
+            << std::setw(2 * sizeof header->FileAlignment) << std::setfill('0') << std::hex << header->FileAlignment
+            << "\nMajor OS Version:\t"
+            << std::dec << header->MajorOperatingSystemVersion
+            << os_name
+            << "\nMinor OS Version:\t"
+            << std::dec << header->MinorOperatingSystemVersion
+            << "\nMajor Image Version:\t"
+            << std::dec << header->MajorImageVersion
+            << "\nMinor Image Version:\t"
+            << std::dec << header->MinorImageVersion
+            << "\nMajor Subsystem Version:\t"
+            << std::dec << header->MajorSubsystemVersion
+            << "\nMinor Subsystem Version:\t"
+            << std::dec << header->MinorSubsystemVersion
+            << "\nWin32 Version Value:\t"
+            << std::setw(2 * sizeof header->Win32VersionValue) << std::setfill('0') << std::hex << header->Win32VersionValue
+            << "\nSize of Image:\t\t"
+            << std::setw(2 * sizeof header->SizeOfImage) << std::setfill('0') << std::hex << header->SizeOfImage
+            << "\nSize of Headers:\t"
+            << std::setw(2 * sizeof header->SizeOfHeaders) << std::setfill('0') << std::hex << header->SizeOfHeaders
+            << "\nChecksum:\t\t"
+            << std::setw(2 * sizeof header->CheckSum) << std::setfill('0') << std::hex << header->CheckSum
+            << "\nSubsystem:\t\t"
+            << std::setw(2 * sizeof header->Subsystem) << std::setfill('0') << std::hex << header->Subsystem
+            << "\t" << subsystem_description
+            << "\nDLL Characteristics:\t"
+            << std::setw(2 * sizeof header->DllCharacteristics) << std::setfill('0') << std::hex << header->DllCharacteristics;
+
+        for (auto& description : get_characteristics_descriptions(header->DllCharacteristics, &DLL_CHARACTERISTICS_DESCIRPTIONS))
+        {
+            ss << "\n\t" << description;
+        }
+
+        ss << "\nSize of Stack Reserve:\t"
+            << std::setw(2 * sizeof header->SizeOfStackReserve) << std::setfill('0') << std::hex << header->SizeOfStackReserve
+            << "\nSize of Stack Commit:\t"
+            << std::setw(2 * sizeof header->SizeOfStackCommit) << std::setfill('0') << std::hex << header->SizeOfStackCommit
+            << "\nSize of Heap Reserve:\t"
+            << std::setw(2 * sizeof header->SizeOfHeapReserve) << std::setfill('0') << std::hex << header->SizeOfHeapReserve
+            << "\nSize of Heap Commit:\t"
+            << std::setw(2 * sizeof header->SizeOfHeapCommit) << std::setfill('0') << std::hex << header->SizeOfHeapCommit
+            << "\nLoader Flags:\t\t"
+            << std::setw(2 * sizeof header->LoaderFlags) << std::setfill('0') << std::hex << header->LoaderFlags
+            << "\nNumber of RVA and Sizes:\t"
+            << std::setw(2 * sizeof header->NumberOfRvaAndSizes) << std::setfill('0') << std::hex << header->NumberOfRvaAndSizes;
+
+        for (unsigned short i = 0; i < IMAGE_NUMBEROF_DIRECTORY_ENTRIES; ++i)
+        {
+            const char* data_directory_name;
+            try
+            {
+                data_directory_name = DATA_DIRECTORY_NAMES.at(i);
+            }
+            catch (std::out_of_range&)
+            {
+                data_directory_name = "Unrecognized data directory";
+            }
+            ss << "\nData Directory[" << i << "]" << std::setw(35) << std::setfill(' ') << data_directory_name << "\t"
+                << "RVA: " << std::setw(2 * sizeof header->DataDirectory[i].VirtualAddress) << std::setfill('0') << std::hex << header->DataDirectory[i].VirtualAddress
+                << "\tSize: " << std::setw(2 * sizeof header->DataDirectory[i].Size) << std::setfill('0') << std::hex << header->DataDirectory[i].Size;
+        }
+
+        std::cout << ss.str();
+    }
+
+    /**
+     * \brief Pretty print the 64-bit optional header information
+     * \param header Pointer to a IMAGE_OPTIONAL_HEADER64
+     */
+    void dump_image_optional_header64(const IMAGE_OPTIONAL_HEADER64* const header)
+    {
+        if (!header)
+        {
+            throw std::invalid_argument("Invalid optional header pointer");
+        }
+        std::stringstream ss;
+
+        const char* os_name;
+        try
+        {
+            os_name = OS_NAMES.at(header->MajorOperatingSystemVersion * 10 + header->MinorOperatingSystemVersion);
+        }
+        catch (std::out_of_range&)
+        {
+            os_name = "Unrecognized OS";
+        }
+
+        const char* subsystem_description;
+        try
+        {
+            subsystem_description = SUBSYSTEM_DESCIRPTIONS.at(header->Subsystem);
+        }
+        catch (std::out_of_range&)
+        {
+            subsystem_description = "Unrecognized subsytem";
+        }
+
+        ss << "\nOptional Header (64-bit):\n"
+            << "Magic:\t\t\t"
+            << std::setw(2 * sizeof header->Magic) << std::setfill('0') << std::hex << header->Magic
+            << "\t" << (header->Magic == 0x10 ? "NT32" : "NT64")
+            << "\nMajor Linker Version:\t"
+            << std::dec << static_cast<int>(header->MajorLinkerVersion)
+            << "\nMinor Linker Version:\t"
+            << std::dec << static_cast<int>(header->MinorLinkerVersion)
+            << "\nSize of Code:\t\t"
+            << std::setw(2 * sizeof header->SizeOfCode) << std::setfill('0') << std::hex << header->SizeOfCode
+            << "\nSize of Initialized Data:\t"
+            << std::setw(2 * sizeof header->SizeOfInitializedData) << std::setfill('0') << std::hex << header->SizeOfInitializedData
+            << "\nSize of Uninitialized Data:\t"
+            << std::setw(2 * sizeof header->SizeOfUninitializedData) << std::setfill('0') << std::hex << header->SizeOfUninitializedData
+            << "\nAddress of Entry Point:\t"
+            << std::setw(2 * sizeof header->AddressOfEntryPoint) << std::setfill('0') << std::hex << header->AddressOfEntryPoint
+            << "\nBase of Code:\t\t"
+            << std::setw(2 * sizeof header->BaseOfCode) << std::setfill('0') << std::hex << header->BaseOfCode
+            << "\nImage Base:\t\t"
+            << std::setw(2 * sizeof header->ImageBase) << std::setfill('0') << std::hex << header->ImageBase
+            << "\nSection Alignment:\t"
+            << std::setw(2 * sizeof header->SectionAlignment) << std::setfill('0') << std::hex << header->SectionAlignment
+            << "\nFile Alignment:\t\t"
+            << std::setw(2 * sizeof header->FileAlignment) << std::setfill('0') << std::hex << header->FileAlignment
+            << "\nMajor OS Version:\t"
+            << std::dec << header->MajorOperatingSystemVersion
+            << "\nMinor OS Version:\t"
+            << std::dec << header->MinorOperatingSystemVersion
+            << "\n\t" << os_name
+            << "\nMajor Image Version:\t"
+            << std::dec << header->MajorImageVersion
+            << "\nMinor Image Version:\t"
+            << std::dec << header->MinorImageVersion
+            << "\nMajor Subsystem Version:\t"
+            << std::dec << header->MajorSubsystemVersion
+            << "\nMinor Subsystem Version:\t"
+            << std::dec << header->MinorSubsystemVersion
+            << "\nWin32 Version Value:\t"
+            << std::setw(2 * sizeof header->Win32VersionValue) << std::setfill('0') << std::hex << header->Win32VersionValue
+            << "\nSize of Image:\t\t"
+            << std::setw(2 * sizeof header->SizeOfImage) << std::setfill('0') << std::hex << header->SizeOfImage
+            << "\nSize of Headers:\t"
+            << std::setw(2 * sizeof header->SizeOfHeaders) << std::setfill('0') << std::hex << header->SizeOfHeaders
+            << "\nChecksum:\t\t"
+            << std::setw(2 * sizeof header->CheckSum) << std::setfill('0') << std::hex << header->CheckSum
+            << "\nSubsystem:\t\t"
+            << std::setw(2 * sizeof header->Subsystem) << std::setfill('0') << std::hex << header->Subsystem
+            << "\t" << subsystem_description
+            << "\nDLL Characteristics:\t"
+            << std::setw(2 * sizeof header->DllCharacteristics) << std::setfill('0') << std::hex << header->DllCharacteristics;
+
+        for (auto& description : get_characteristics_descriptions(header->DllCharacteristics, &DLL_CHARACTERISTICS_DESCIRPTIONS))
+            {
+                ss << "\n\t" << description;
+            }
+
+        ss << "\nSize of Stack Reserve:\t"
+            << std::setw(2 * sizeof header->SizeOfStackReserve) << std::setfill('0') << std::hex << header->SizeOfStackReserve
+            << "\nSize of Stack Commit:\t"
+            << std::setw(2 * sizeof header->SizeOfStackCommit) << std::setfill('0') << std::hex << header->SizeOfStackCommit
+            << "\nSize of Heap Reserve:\t"
+            << std::setw(2 * sizeof header->SizeOfHeapReserve) << std::setfill('0') << std::hex << header->SizeOfHeapReserve
+            << "\nSize of Heap Commit:\t"
+            << std::setw(2 * sizeof header->SizeOfHeapCommit) << std::setfill('0') << std::hex << header->SizeOfHeapCommit
+            << "\nLoader Flags:\t\t"
+            << std::setw(2 * sizeof header->LoaderFlags) << std::setfill('0') << std::hex << header->LoaderFlags
+            << "\nNumber of RVA and Sizes:\t"
+            << std::setw(2 * sizeof header->NumberOfRvaAndSizes) << std::setfill('0') << std::hex << header->NumberOfRvaAndSizes;
+
+        for (unsigned short i = 0; i < IMAGE_NUMBEROF_DIRECTORY_ENTRIES; ++i)
+        {
+            const char * data_directory_name;
+            try
+            {
+                data_directory_name = DATA_DIRECTORY_NAMES.at(i);
+            }
+            catch (std::out_of_range&)
+            {
+                data_directory_name = "Unrecognized data directory";
+            }
+            ss << "\nData Directory[" << i << "]" << std::setw(35) << std::setfill(' ') << data_directory_name << "\t"
+                << "RVA: " << std::setw(2 * sizeof header->DataDirectory[i].VirtualAddress) << std::setfill('0') << std::hex << header->DataDirectory[i].VirtualAddress
+                << "\tSize: " << std::setw(2 * sizeof header->DataDirectory[i].Size) << std::setfill('0') << std::hex << header->DataDirectory[i].Size;
+        }
+
+        std::cout << ss.str();
+    }
+    
+    /**
      * \brief Get vector of strings containing human-readable characteristics
      * of the PE file
      * \param characteristics DWORD value
+     * \param descriptions Map containing key-description pairs
      * \return Vector of strings
      */
-    std::vector<std::string> get_characteristics_descriptions(DWORD characteristics)
+    std::vector<std::string> get_characteristics_descriptions(const DWORD characteristics, const std::map<WORD, const char*>* descriptions)
     {
-        std::vector<std::string > descriptions;
-        for (auto characteristic : CHARACTERISTICS_DESCRIPTIONS)
+        std::vector<std::string > matched_descriptions;
+        for (auto characteristic : *descriptions)
         {
             if ((characteristics & characteristic.first) != 0)
             {
-                descriptions.emplace_back(characteristic.second);
+                matched_descriptions.emplace_back(characteristic.second);
             }
         }
-        return descriptions;
+        return matched_descriptions;
     }
 }

@@ -139,7 +139,7 @@ size_t read_rich_header(FILE* pe_file, RICH_HEADER_ENTRY* buffer, size_t buffer_
                 break;
             }
             // Cycle the XOR key byte
-            key_index = (key_index > 0) ? key_index - 1 : KEY_SIZE - 1;
+            key_index = key_index > 0 ? key_index - 1 : KEY_SIZE - 1;
         }
         else
         {
@@ -281,7 +281,7 @@ PE_TYPE get_pe_type(FILE* pe_file)
     }
 
     const _IMAGE_DOS_HEADER dos_header = read_dos_header(pe_file);
-    const off_t magic_offset = (long)dos_header.e_lfanew + sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER);
+    const off_t magic_offset = static_cast<off_t>(dos_header.e_lfanew) + sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER);
 
     utils::safe_seek(pe_file, magic_offset);
     WORD magic;

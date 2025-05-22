@@ -11,6 +11,9 @@
 #include <string>
 
 namespace app_utils {
+
+    constexpr int MAX_BUF_LENGTH = 4096;
+
     /**
      * \brief Get the absolute path of a file that is located in the
      * same directory as the currently executing module
@@ -108,15 +111,45 @@ namespace app_utils {
      * \param time Timestamp
      * \return Datetime string
      */
-    std::string format_unix_timestamp(time_t time)
+    std::string format_unix_timestamp(const time_t time)
     {
         char formatted_time[100];
 
-        const size_t result = ctime_s(formatted_time, sizeof(formatted_time), &time);
+        const size_t result = ctime_s(formatted_time, sizeof formatted_time, &time);
 
         if (result == 0) {
             return { formatted_time };
         }
         throw std::runtime_error("Error formatting timestamp");
     }
+
+    /**
+     * \brief Open a file in the same directory as the executing process
+     * \param fileName Buffer containing the file name
+     * \return Pointer to the open file
+     */
+    FILE* open_local_file(const WCHAR* fileName)
+    {
+        FILE* file;
+        WCHAR full_file_name[MAX_BUF_LENGTH];
+
+        if (get_abs_path_from_filename(full_file_name, fileName, MAX_BUF_LENGTH) != 0)
+        {
+            std::stringstream ss;
+            ss << "Can't get full path of " << fileName;
+            throw std::runtime_error(ss.str());
+        }
+
+        const std::string file_name_string = wchar_t_buffer_to_string(full_file_name);
+
+        if (fopen_s(&file, file_name_string.c_str(), "r") != 0)
+        {
+            std::stringstream ss;
+            ss << "Can't open file " << file_name_string;
+            throw std::runtime_error(ss.str());
+        }
+
+        return file;
+    }
+
 }
