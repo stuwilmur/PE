@@ -12,7 +12,7 @@
 constexpr int MAX_DOS_STUB_SIZE = 256;
 constexpr int MAX_RICH_HEADER_ENTRIES = 100;
 
-const std::map<WORD, const char*> MACHINE_NAMES = {
+const std::map<DWORD, const char*> MACHINE_NAMES = {
     {IMAGE_FILE_MACHINE_UNKNOWN           ,"Unknown"},
     {IMAGE_FILE_MACHINE_TARGET_HOST       ,"Useful for indicating we want to interact with the host and not a WoW guest."},
     {IMAGE_FILE_MACHINE_I386              ,"Intel 386."},
@@ -47,7 +47,7 @@ const std::map<WORD, const char*> MACHINE_NAMES = {
     {IMAGE_FILE_MACHINE_CEE               ,""}
 };
 
-const std::map<WORD, const char*> CHARACTERISTICS_DESCRIPTIONS = {
+const std::map<DWORD, const char*> CHARACTERISTICS_DESCRIPTIONS = {
     {IMAGE_FILE_RELOCS_STRIPPED         , "Relocation info stripped from file"},
     {IMAGE_FILE_EXECUTABLE_IMAGE        , "File is executable  (i.e. no unresolved external references)"},
     {IMAGE_FILE_LINE_NUMS_STRIPPED      , "Line numbers stripped from file"},
@@ -65,7 +65,7 @@ const std::map<WORD, const char*> CHARACTERISTICS_DESCRIPTIONS = {
     { IMAGE_FILE_BYTES_REVERSED_HI      , "Bytes of machine word are reversed"}
 };
 
-const std::map<WORD, const char*> SUBSYSTEM_DESCIRPTIONS = {
+const std::map<DWORD, const char*> SUBSYSTEM_DESCIRPTIONS = {
     {IMAGE_SUBSYSTEM_UNKNOWN                 , "Unknown subsystem"},
     {IMAGE_SUBSYSTEM_NATIVE                  , "Image doesn't require a subsystem"},
     {IMAGE_SUBSYSTEM_WINDOWS_GUI             , "Image runs in the Windows GUI subsystem"},
@@ -83,7 +83,7 @@ const std::map<WORD, const char*> SUBSYSTEM_DESCIRPTIONS = {
     {IMAGE_SUBSYSTEM_XBOX_CODE_CATALOG       , "XBOX code catalog"},
 };
 
-const std::map<WORD, const char*> DLL_CHARACTERISTICS_DESCIRPTIONS = {
+const std::map<DWORD, const char*> DLL_CHARACTERISTICS_DESCIRPTIONS = {
     {IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA       , "Image can handle a high entropy 64-bit virtual address space."},
     {IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE          , "DLL can move"},
     {IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY       , "Code Integrity Image"},
@@ -97,7 +97,7 @@ const std::map<WORD, const char*> DLL_CHARACTERISTICS_DESCIRPTIONS = {
     {IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE , "Terminal server aware"},
 };
 
-const std::map<WORD, const char*> OS_NAMES = {
+const std::map<DWORD, const char*> OS_NAMES = {
     { 100, "Windows Server 2016/2019/2022/Windows 10/100"},
     { 63, "Windows Server 2012 R2/Windows 8.1"},
     { 62, "Windows Server 2012/Windows 8"},
@@ -108,7 +108,7 @@ const std::map<WORD, const char*> OS_NAMES = {
     { 50, "Windows 2000"},
 };
 
-const std::map<WORD, const char*> DATA_DIRECTORY_NAMES = {
+const std::map<DWORD, const char*> DATA_DIRECTORY_NAMES = {
     { IMAGE_DIRECTORY_ENTRY_EXPORT        , "Export Directory"},
     { IMAGE_DIRECTORY_ENTRY_IMPORT        , "Import Directory"},
     { IMAGE_DIRECTORY_ENTRY_RESOURCE      , "Resource Directory" },
@@ -124,6 +124,39 @@ const std::map<WORD, const char*> DATA_DIRECTORY_NAMES = {
     { IMAGE_DIRECTORY_ENTRY_IAT           , "Import Address Table" },
     { IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT  , "Delay Load Import Descriptors"},
     { IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR, "COM Runtime descriptor" },
+};
+
+const std::map<DWORD, const char*> IMAGE_SECTION_CHARACTERISTICS = {
+    {IMAGE_SCN_TYPE_NO_PAD, "The section should not be padded to next boundary."},
+    {IMAGE_SCN_CNT_CODE, "The section contains executable code."},
+    {IMAGE_SCN_CNT_INITIALIZED_DATA, "The section contains initialized data."},
+    {IMAGE_SCN_CNT_UNINITIALIZED_DATA, "The section contains uninitialized data."},
+    {IMAGE_SCN_LNK_INFO, "The section contains comments or or information" },
+    {IMAGE_SCN_LNK_REMOVE, "The section will not become part of the image."},
+    {IMAGE_SCN_LNK_COMDAT, "The section contains COMDAT data."},
+    {IMAGE_SCN_GPREL, "The section contains data referenced through global pointer (GP)."},
+    {IMAGE_SCN_ALIGN_1BYTES, "Align data on a 1-byte boundary."},
+    {IMAGE_SCN_ALIGN_2BYTES, "Align data on a 2-byte boundary."},
+    {IMAGE_SCN_ALIGN_4BYTES, "Align data on a 4-byte boundary."},
+    {IMAGE_SCN_ALIGN_8BYTES, "Align data on an 8-byte boundary."},
+    {IMAGE_SCN_ALIGN_16BYTES, "Align data on a 16-byte boundary."},
+    {IMAGE_SCN_ALIGN_32BYTES, "Align data on a 32-byte boundary."},
+    {IMAGE_SCN_ALIGN_64BYTES, "Align data on a 64-byte boundary."},
+    {IMAGE_SCN_ALIGN_128BYTES, "Align data on a 128-byte boundary."},
+    {IMAGE_SCN_ALIGN_256BYTES, "Align data on a 256-byte boundary."},
+    {IMAGE_SCN_ALIGN_512BYTES, "Align data on a 512-byte boundary."},
+    {IMAGE_SCN_ALIGN_1024BYTES, "Align data on a 1024-byte boundary."},
+    {IMAGE_SCN_ALIGN_2048BYTES, "Align data on a 2048-byte boundary."},
+    {IMAGE_SCN_ALIGN_4096BYTES, "Align data on a 4096-byte boundary."},
+    {IMAGE_SCN_ALIGN_8192BYTES, "Align data on an 8192-byte boundary."},
+    {IMAGE_SCN_LNK_NRELOC_OVFL, "The section contains extended relocations."},
+    {IMAGE_SCN_MEM_DISCARDABLE, "The section can be discarded as needed."},
+    {IMAGE_SCN_MEM_NOT_CACHED, "The section cannot be cached."},
+    {IMAGE_SCN_MEM_NOT_PAGED, "The section is not pageable."},
+    {IMAGE_SCN_MEM_SHARED, "The section can be shared in memory."},
+    {IMAGE_SCN_MEM_EXECUTE, "The section can be executed as code."},
+    {IMAGE_SCN_MEM_READ, "The section can be read."},
+    {IMAGE_SCN_MEM_WRITE, "The section can be written to."},
 };
 
 namespace explore
@@ -144,6 +177,8 @@ namespace explore
         explore_dos_stub(file);
         explore_rich_header(file);
         explore_nt_headers(file);
+        explore_image_section_headers(file);
+        explore_import_directory_table(file);
     }
 
     /**
@@ -160,7 +195,7 @@ namespace explore
         const _IMAGE_DOS_HEADER dos_header = read_dos_header(file);
 
         std::stringstream ss;
-        ss << "DOS header:\ne_magic:\t" << static_cast<char>(LOBYTE(dos_header.e_magic)) << static_cast<char>(HIBYTE(dos_header.e_magic))
+        ss << "DOS header:\n\ne_magic:\t" << static_cast<char>(LOBYTE(dos_header.e_magic)) << static_cast<char>(HIBYTE(dos_header.e_magic))
             << " = 0x" << std::hex << dos_header.e_magic
             << "\ne_lfanew:\t0x" << std::hex << dos_header.e_lfanew;
         std::cout << ss.str();
@@ -180,9 +215,9 @@ namespace explore
         const size_t dos_stub_length = read_dos_stub(file, dos_stub.data(), dos_stub.size());
         dos_stub.resize(dos_stub_length);
 
-        std::cout << "\n\nDOS stub (ASCII):\n";
+        std::cout << "\n\nDOS stub (ASCII):\n\n";
         dump_bytes(&dos_stub, app_utils::ascii_format);
-        std::cout << "\n\nDOS stub (hex):\n";
+        std::cout << "\n\nDOS stub (hex):\n\n";
         dump_bytes(&dos_stub, app_utils::hex_format);
     }
 
@@ -202,7 +237,7 @@ namespace explore
         rich_header.resize(number_of_header_entries);
 
         std::stringstream ss;
-        ss << "\n\nRich header entries info:\n";
+        ss << "\n\nRich header entries info:\n\n";
         for (const auto entry : rich_header)
         {
             ss << "product: " << std::setw(2 * sizeof RICH_HEADER_ENTRY::product)
@@ -238,6 +273,56 @@ namespace explore
     }
 
     /**
+     * \brief Explore the image section headers
+     * \param file File pointer
+     */
+    void explore_image_section_headers(FILE* file)
+    {
+        if (!file)
+        {
+            throw std::invalid_argument("Invalid file pointer");
+        }
+
+        const WORD number_of_section_headers = get_number_image_section_headers(file);
+        const auto allocated_size = static_cast<size_t>(number_of_section_headers * 2);
+        std::vector<IMAGE_SECTION_HEADER> image_section_headers(allocated_size);
+        const size_t number_of_read_section_headers = read_image_section_headers(file, image_section_headers.data(), allocated_size);
+        image_section_headers.resize(number_of_read_section_headers);
+
+        std::cout << "\n\nImage section headers:\n\n";
+        for (auto image_section_header : image_section_headers)
+        {
+            dump_image_section_header(&image_section_header);
+            std::cout << "\n\n";
+        }
+    }
+
+    /**
+     * \brief Explore the import directory table
+     * \param file File pointer
+     */
+    void explore_import_directory_table(FILE* file)
+    {
+        if (!file)
+        {
+            throw std::invalid_argument("Invalid file pointer");
+        }
+
+        constexpr int MAX_NUM_IMAGE_SECTION_HEADERS = 20;
+
+        std::vector<IMAGE_IMPORT_DESCRIPTOR> image_import_descriptors(MAX_NUM_IMAGE_SECTION_HEADERS);
+        const size_t number_read_image_import_descriptors = read_import_directory_table(file, image_import_descriptors.data(), MAX_NUM_IMAGE_SECTION_HEADERS);
+        image_import_descriptors.resize(number_read_image_import_descriptors);
+
+        std::cout << "\n\nImage import descriptors:\n\n";
+        for (const auto &image_import_descriptor : image_import_descriptors)
+        {
+            std::cout << "\n\n";
+            dump_image_import_descriptor(&image_import_descriptor);
+        }
+    }
+
+    /**
      * \brief Pretty print the IMAGE_FILE_HEADER structure 
      * \param header Pointer to IMAGE_FILE_HEADER structure
      */
@@ -259,7 +344,7 @@ namespace explore
             machine_name = "Unrecognized machine type";
         }
 
-        ss << "\nFile header:\n"
+        ss << "\nFile header:\n\n"
             << "Machine:\t\t"
             << std::setw(2 * sizeof header->Machine) << std::setfill('0') << std::hex << header->Machine
             << "\t\t" << machine_name
@@ -319,7 +404,7 @@ namespace explore
             subsystem_description = "Unrecognized subsytem";
         }
 
-        ss << "\nOptional Header:\n"
+        ss << "\nOptional Header:\n\n"
             << "Magic:\t\t\t"
             << std::setw(2 * sizeof header->Magic) << std::setfill('0') << std::hex << header->Magic
             << "\t" << (header->Magic == 0x10 ? "NT32" : "NT64")
@@ -441,7 +526,7 @@ namespace explore
             subsystem_description = "Unrecognized subsytem";
         }
 
-        ss << "\nOptional Header (64-bit):\n"
+        ss << "\nOptional Header (64-bit):\n\n"
             << "Magic:\t\t\t"
             << std::setw(2 * sizeof header->Magic) << std::setfill('0') << std::hex << header->Magic
             << "\t" << (header->Magic == 0x10 ? "NT32" : "NT64")
@@ -528,6 +613,64 @@ namespace explore
 
         std::cout << ss.str();
     }
+
+    /**
+     * \brief Pretty print an individual image section header
+     * \param header Pointer to an IMAGE_SECTION_HEADER
+     */
+    void dump_image_section_header(const IMAGE_SECTION_HEADER* header)
+    {
+        if (!header)
+        {
+            throw std::invalid_argument("Invalid image section header pointer");
+        }
+        
+        std::stringstream ss;
+        ss << header->Name << "\n";
+
+        constexpr int labelWidth = 24;
+
+        ss << std::left
+            << std::setw(labelWidth) << "VirtualSize:" << std::hex << std::setw(8) << std::setfill(' ') << header->Misc.VirtualSize << "\n"
+            << std::setw(labelWidth) << "VirtualAddress:" << std::hex << std::setw(8) << std::setfill(' ') << header->VirtualAddress << "\n"
+            << std::setw(labelWidth) << "SizeOfRawData:" << std::hex << std::setw(8) << std::setfill(' ') << header->SizeOfRawData << "\n"
+            << std::setw(labelWidth) << "PointerToRawData:" << std::hex << std::setw(8) << std::setfill(' ') << header->PointerToRawData << "\n"
+            << std::setw(labelWidth) << "PointerToRelocations:" << std::hex << std::setw(8) << std::setfill(' ') << header->PointerToRelocations << "\n"
+            << std::setw(labelWidth) << "PointerToLinenumbers:" << std::hex << std::setw(8) << std::setfill(' ') << header->PointerToLinenumbers << "\n"
+            << std::setw(labelWidth) << "NumberOfRelocations:" << std::hex << std::setw(8) << std::setfill(' ') << header->NumberOfRelocations << "\n"
+            << std::setw(labelWidth) << "NumberOfLinenumbers:" << std::hex << std::setw(8) << std::setfill(' ') << header->NumberOfLinenumbers << "\n"
+            << std::setw(labelWidth) << "Characteristics:" << std::hex << std::setw(8) << std::setfill(' ') << header->Characteristics;
+
+        for (auto& description : get_characteristics_descriptions(header->Characteristics, &IMAGE_SECTION_CHARACTERISTICS))
+        {
+            ss << "\n\t" << description;
+        }
+
+        std::cout << ss.str();
+
+    }
+
+
+    void dump_image_import_descriptor(const IMAGE_IMPORT_DESCRIPTOR* descriptor)
+    {
+        if (!descriptor)
+        {
+            throw std::invalid_argument("Invalid image import descriptor pointer");
+        }
+
+        std::stringstream ss;
+        ss << descriptor->Name << "\n";
+
+        constexpr int labelWidth = 24;
+
+        ss << std::left
+            << std::setw(labelWidth) << "OriginalFirstThunk:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->OriginalFirstThunk << "\n"
+            << std::setw(labelWidth) << "TimeDateStamp:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->TimeDateStamp << "\n"
+            << std::setw(labelWidth) << "ForwarderChain:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->ForwarderChain << "\n"
+            << std::setw(labelWidth) << "FirstThunk:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->FirstThunk << "\n";
+
+        std::cout << ss.str();
+    }
     
     /**
      * \brief Get vector of strings containing human-readable characteristics
@@ -536,7 +679,7 @@ namespace explore
      * \param descriptions Map containing key-description pairs
      * \return Vector of strings
      */
-    std::vector<std::string> get_characteristics_descriptions(const DWORD characteristics, const std::map<WORD, const char*>* descriptions)
+    std::vector<std::string> get_characteristics_descriptions(const DWORD characteristics, const std::map<DWORD, const char*>* descriptions)
     {
         std::vector<std::string > matched_descriptions;
         for (auto characteristic : *descriptions)

@@ -3,6 +3,8 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <conio.h>
+#include <iostream>
 
 #include "AppUtils.h"
 #include "Explore.h"
@@ -24,6 +26,10 @@ int main()
         ss << "Failed to close file " << file_name;
         throw std::runtime_error(ss.str());
     }
+
+    std::cout << "\n\nPress any key to exit...";
+    while(_kbhit() == 0)
+    {}
 
     return 0;
 }

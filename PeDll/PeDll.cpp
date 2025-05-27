@@ -307,3 +307,169 @@ PE_TYPE get_pe_type(FILE* pe_file)
     }
     return pe_type;
 }
+
+/**
+ * \brief Get the number of image section headers in the PE file
+ * \param  pe_file Pointer to PE file
+ * \return The number of IMAGE_SECTION_HEADER entries
+ */
+PEDLL_API WORD get_number_image_section_headers(FILE* pe_file)
+{
+    if (!pe_file)
+    {
+        throw std::invalid_argument("Invalid file pointer or buffer");
+    }
+
+    PE_TYPE pe_type = get_pe_type(pe_file);
+    WORD number_of_sections;
+
+    if (pe_type == PE32)
+    {
+        IMAGE_NT_HEADERS32 nt_headers32 = read_nt_headers_32(pe_file);
+        number_of_sections = nt_headers32.FileHeader.NumberOfSections;
+    }
+    else if (pe_type == PE64)
+    {
+        IMAGE_NT_HEADERS64 nt_headers64 = read_nt_headers_64(pe_file);
+        number_of_sections = nt_headers64.FileHeader.NumberOfSections;
+    }
+    else
+    {
+        throw std::invalid_argument("Invalid PE file type");
+    }
+
+    return number_of_sections;
+}
+
+/**
+ * \brief Read the image section headers to a buffer
+ * \param  pe_file Pointer to PE file
+ * \param  buffer Pointer to supplied buffer which will be populated with image section headers
+ * \param  buffer_size Size of the supplied buffer: number of IMAGE_SECTION_HEADER entries it can hold
+ * \return The number of read IMAGE_SECTION_HEADER entries
+ */
+size_t read_image_section_headers(FILE* pe_file, IMAGE_SECTION_HEADER* buffer, const size_t buffer_size) //!! todo - make all FILE* const
+{
+    if (!pe_file)
+    {
+        throw std::invalid_argument("Invalid file pointer or buffer");
+    }
+
+    const _IMAGE_DOS_HEADER dos_header = read_dos_header(pe_file);
+    const PE_TYPE pe_type = get_pe_type(pe_file);
+    off_t size_of_nt_headers;
+
+    if (pe_type == PE32)
+    {
+        size_of_nt_headers = sizeof(IMAGE_NT_HEADERS32);
+    }
+    else if (pe_type == PE64)
+    {
+        size_of_nt_headers = sizeof(IMAGE_NT_HEADERS64);
+    }
+    else
+    {
+        throw std::invalid_argument("Invalid PE file type");
+    }
+
+    const off_t section_headers_offset = dos_header.e_lfanew + size_of_nt_headers;
+    utils::safe_seek(pe_file, section_headers_offset);
+
+    const WORD number_of_sections = get_number_image_section_headers(pe_file);
+    if (number_of_sections > buffer_size)
+    {
+        std::stringstream ss;
+        ss << "Supplied buffer of size " << buffer_size
+            << " is too small for number of image section header entries "
+            << number_of_sections;
+        throw std::runtime_error(ss.str());
+    }
+
+    std::vector<IMAGE_SECTION_HEADER> section_headers;
+
+    for (int i = 0; i < number_of_sections; i++)
+    {
+        IMAGE_SECTION_HEADER section_header;
+        if (fread_s(&section_header, sizeof(IMAGE_SECTION_HEADER), sizeof(IMAGE_SECTION_HEADER), 1, pe_file) != 1)
+        {
+            throw std::runtime_error("Can't read image section header");
+        }
+        section_headers.emplace_back(section_header);
+    }
+
+    std::copy(section_headers.begin(), section_headers.end(), buffer);
+    return section_headers.size();
+}
+
+
+/**
+ * \brief Read the import directory table into a buffer
+ * \param  pe_file Pointer to PE file
+ * \param  buffer Pointer to supplied buffer which will be populated with image import descriptor entries
+ * \param  buffer_size Size of the supplied buffer: number of IMAGE_IMPORT_DESCRIPTOR entries it can hold
+ * \return The number of read IMAGE_IMPORT_DESCRIPTOR entries in the table
+ */
+size_t read_import_directory_table(FILE* pe_file, IMAGE_IMPORT_DESCRIPTOR* buffer, size_t buffer_size)
+{
+    if (!pe_file)
+    {
+        throw std::invalid_argument("Invalid file pointer or buffer");
+    }
+
+    // Read the image section headers
+    const WORD number_of_section_headers = get_number_image_section_headers(pe_file);
+    const auto allocated_size = static_cast<size_t>(number_of_section_headers * 2);
+    std::vector<IMAGE_SECTION_HEADER> image_section_headers(allocated_size);
+    const size_t number_of_read_section_headers = read_image_section_headers(pe_file, image_section_headers.data(), allocated_size);
+    image_section_headers.resize(number_of_read_section_headers);
+
+    DWORD pointer_to_idata_section_data = 0;
+
+    for (const auto& image_section_header : image_section_headers)
+    {
+        if (memcmp(image_section_header.Name, ".idata\0\0", 8) == 0)
+        {
+            pointer_to_idata_section_data = image_section_header.PointerToRawData;
+        }
+    }
+
+    if (pointer_to_idata_section_data == 0)
+    {
+        throw std::exception("Failed to find .idata entry in image section header table");
+    }
+
+    std::vector<IMAGE_IMPORT_DESCRIPTOR> image_import_descriptors;
+    utils::safe_seek(pe_file, pointer_to_idata_section_data);
+
+    while (true)
+    {
+        IMAGE_IMPORT_DESCRIPTOR image_import_descriptor;
+
+        if (fread_s(&image_import_descriptor, sizeof(IMAGE_IMPORT_DESCRIPTOR), sizeof(IMAGE_IMPORT_DESCRIPTOR), 1, pe_file) != 1)
+        {
+            throw std::runtime_error("Can't read image import descriptor");
+        }
+
+        if (image_import_descriptor.Name == 0
+            && image_import_descriptor.FirstThunk == 0
+            && image_import_descriptor.ForwarderChain == 0
+            && image_import_descriptor.TimeDateStamp == 0
+            && image_import_descriptor.Characteristics == 0)
+        {
+            break;
+        }
+        image_import_descriptors.emplace_back(image_import_descriptor);
+    }
+
+    if (image_import_descriptors.size() > buffer_size)
+    {
+        std::stringstream ss;
+        ss << "Supplied buffer of size " << buffer_size
+            << " is too small for number of image section header entries "
+            << image_import_descriptors.size();
+        throw std::runtime_error(ss.str());
+    }
+
+    std::copy(image_import_descriptors.begin(), image_import_descriptors.end(), buffer);
+    return image_import_descriptors.size();
+}
