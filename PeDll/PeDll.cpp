@@ -223,7 +223,7 @@ PEDLL_API IMAGE_NT_HEADERS32 read_nt_headers_32(FILE* pe_file)
 {
     if (!pe_file)
     {
-        throw std::invalid_argument("Invalid file pointer or buffer");
+        throw std::invalid_argument("Invalid file pointer");
     }
 
     if (get_pe_type(pe_file) != PE32)
@@ -250,7 +250,7 @@ PEDLL_API IMAGE_NT_HEADERS64 read_nt_headers_64(FILE* pe_file)
 {
     if (!pe_file)
     {
-        throw std::invalid_argument("Invalid file pointer or buffer");
+        throw std::invalid_argument("Invalid file pointer");
     }
 
     if (get_pe_type(pe_file) != PE64)
@@ -277,7 +277,7 @@ PE_TYPE get_pe_type(FILE* pe_file)
 {
     if (!pe_file)
     {
-        throw std::invalid_argument("Invalid file pointer or buffer");
+        throw std::invalid_argument("Invalid file pointer");
     }
 
     const _IMAGE_DOS_HEADER dos_header = read_dos_header(pe_file);
@@ -317,20 +317,20 @@ PEDLL_API WORD get_number_image_section_headers(FILE* pe_file)
 {
     if (!pe_file)
     {
-        throw std::invalid_argument("Invalid file pointer or buffer");
+        throw std::invalid_argument("Invalid file pointer");
     }
 
-    PE_TYPE pe_type = get_pe_type(pe_file);
+    const PE_TYPE pe_type = get_pe_type(pe_file);
     WORD number_of_sections;
 
     if (pe_type == PE32)
     {
-        IMAGE_NT_HEADERS32 nt_headers32 = read_nt_headers_32(pe_file);
+        const IMAGE_NT_HEADERS32 nt_headers32 = read_nt_headers_32(pe_file);
         number_of_sections = nt_headers32.FileHeader.NumberOfSections;
     }
     else if (pe_type == PE64)
     {
-        IMAGE_NT_HEADERS64 nt_headers64 = read_nt_headers_64(pe_file);
+        const IMAGE_NT_HEADERS64 nt_headers64 = read_nt_headers_64(pe_file);
         number_of_sections = nt_headers64.FileHeader.NumberOfSections;
     }
     else
@@ -342,15 +342,54 @@ PEDLL_API WORD get_number_image_section_headers(FILE* pe_file)
 }
 
 /**
+ * \brief Read the image data directory entries into a buffer
+ * \param  pe_file Pointer to PE file
+ * \param buffer Pointer to a buffer which will be populated
+ * \param buffer_size Number of entries the buffer can hold
+ */
+PEDLL_API void read_image_data_directory(FILE* pe_file, IMAGE_DATA_DIRECTORY* buffer, size_t buffer_size)
+{
+    if (!pe_file || !buffer)
+    {
+        throw std::invalid_argument("Invalid file pointer or buffer");
+    }
+
+    if (buffer_size < IMAGE_NUMBEROF_DIRECTORY_ENTRIES)
+    {
+        throw std::invalid_argument("Supplied buffer is smaller than number of image directory entries");
+    }
+
+    const PE_TYPE pe_type = get_pe_type(pe_file);
+    const IMAGE_DATA_DIRECTORY* p_data_directory;
+
+    if (pe_type == PE32)
+    {
+        const IMAGE_NT_HEADERS32 nt_headers32 = read_nt_headers_32(pe_file);
+        p_data_directory = nt_headers32.OptionalHeader.DataDirectory;
+    }
+    else if (pe_type == PE64)
+    {
+        const IMAGE_NT_HEADERS64 nt_headers64 = read_nt_headers_64(pe_file);
+        p_data_directory = nt_headers64.OptionalHeader.DataDirectory;
+    }
+    else
+    {
+        throw std::invalid_argument("Invalid PE file type");
+    }
+
+    memcpy(buffer, p_data_directory, IMAGE_NUMBEROF_DIRECTORY_ENTRIES * sizeof(IMAGE_DATA_DIRECTORY));
+}
+
+/**
  * \brief Read the image section headers to a buffer
  * \param  pe_file Pointer to PE file
  * \param  buffer Pointer to supplied buffer which will be populated with image section headers
  * \param  buffer_size Size of the supplied buffer: number of IMAGE_SECTION_HEADER entries it can hold
  * \return The number of read IMAGE_SECTION_HEADER entries
  */
-size_t read_image_section_headers(FILE* pe_file, IMAGE_SECTION_HEADER* buffer, const size_t buffer_size) //!! todo - make all FILE* const
+size_t read_image_section_headers(FILE* pe_file, IMAGE_SECTION_HEADER* buffer, const size_t buffer_size)
 {
-    if (!pe_file)
+    if (!pe_file || !buffer)
     {
         throw std::invalid_argument("Invalid file pointer or buffer");
     }
@@ -401,7 +440,6 @@ size_t read_image_section_headers(FILE* pe_file, IMAGE_SECTION_HEADER* buffer, c
     return section_headers.size();
 }
 
-
 /**
  * \brief Read the import directory table into a buffer
  * \param  pe_file Pointer to PE file
@@ -411,7 +449,7 @@ size_t read_image_section_headers(FILE* pe_file, IMAGE_SECTION_HEADER* buffer, c
  */
 size_t read_import_directory_table(FILE* pe_file, IMAGE_IMPORT_DESCRIPTOR* buffer, size_t buffer_size)
 {
-    if (!pe_file)
+    if (!pe_file || !buffer)
     {
         throw std::invalid_argument("Invalid file pointer or buffer");
     }
@@ -423,23 +461,14 @@ size_t read_import_directory_table(FILE* pe_file, IMAGE_IMPORT_DESCRIPTOR* buffe
     const size_t number_of_read_section_headers = read_image_section_headers(pe_file, image_section_headers.data(), allocated_size);
     image_section_headers.resize(number_of_read_section_headers);
 
-    DWORD pointer_to_idata_section_data = 0;
+    std::vector<IMAGE_DATA_DIRECTORY> image_data_directory(IMAGE_NUMBEROF_DIRECTORY_ENTRIES);
+    read_image_data_directory(pe_file, image_data_directory.data(), image_data_directory.size());
 
-    for (const auto& image_section_header : image_section_headers)
-    {
-        if (memcmp(image_section_header.Name, ".idata\0\0", 8) == 0)
-        {
-            pointer_to_idata_section_data = image_section_header.PointerToRawData;
-        }
-    }
-
-    if (pointer_to_idata_section_data == 0)
-    {
-        throw std::exception("Failed to find .idata entry in image section header table");
-    }
+    const DWORD import_directory_rva = image_data_directory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+    const off_t import_data_file_offset = rva_to_file_offset(import_directory_rva, image_section_headers);
 
     std::vector<IMAGE_IMPORT_DESCRIPTOR> image_import_descriptors;
-    utils::safe_seek(pe_file, pointer_to_idata_section_data);
+    utils::safe_seek(pe_file, import_data_file_offset);
 
     while (true)
     {
@@ -472,4 +501,27 @@ size_t read_import_directory_table(FILE* pe_file, IMAGE_IMPORT_DESCRIPTOR* buffe
 
     std::copy(image_import_descriptors.begin(), image_import_descriptors.end(), buffer);
     return image_import_descriptors.size();
+}
+
+/**
+ * \brief Calculate a file offset given an RVA and the read image section headers.
+ * This is achieved by checking whether the supplied RVA falls within the bounds
+ * of each section header, using its virtual address and size of raw data.
+ * \param rva RVA to be converted
+ * \param image_section_headers Reference to a vector of IMAGE_SECTION_HEADERs
+ * \return The calculated offset
+ */
+off_t rva_to_file_offset(DWORD rva, const std::vector<IMAGE_SECTION_HEADER>& image_section_headers)
+{
+    for (const auto & image_section_header : image_section_headers)
+    {
+        if (rva >= image_section_header.VirtualAddress && rva <= image_section_header.VirtualAddress + image_section_header.SizeOfRawData)
+        {
+            return rva - image_section_header.VirtualAddress + image_section_header.PointerToRawData;
+        }
+    }
+
+    std::stringstream ss;
+    ss << "Unable to find image section that includes RVA " << std::hex << rva;
+    throw std::runtime_error(ss.str());
 }

@@ -314,7 +314,7 @@ namespace explore
         const size_t number_read_image_import_descriptors = read_import_directory_table(file, image_import_descriptors.data(), MAX_NUM_IMAGE_SECTION_HEADERS);
         image_import_descriptors.resize(number_read_image_import_descriptors);
 
-        std::cout << "\n\nImage import descriptors:\n\n";
+        std::cout << "\nImage import descriptors:";
         for (const auto &image_import_descriptor : image_import_descriptors)
         {
             std::cout << "\n\n";
@@ -650,7 +650,10 @@ namespace explore
 
     }
 
-
+    /**
+     * \brief Pretty print an import image descriptor
+     * \param descriptor Pointer to IMAGE_IMPORT_DESCRIPTOR
+     */
     void dump_image_import_descriptor(const IMAGE_IMPORT_DESCRIPTOR* descriptor)
     {
         if (!descriptor)
@@ -659,15 +662,15 @@ namespace explore
         }
 
         std::stringstream ss;
-        ss << descriptor->Name << "\n";
 
         constexpr int labelWidth = 24;
 
         ss << std::left
+            << std::setw(labelWidth) << "Name:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->Name << "\n"
             << std::setw(labelWidth) << "OriginalFirstThunk:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->OriginalFirstThunk << "\n"
             << std::setw(labelWidth) << "TimeDateStamp:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->TimeDateStamp << "\n"
             << std::setw(labelWidth) << "ForwarderChain:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->ForwarderChain << "\n"
-            << std::setw(labelWidth) << "FirstThunk:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->FirstThunk << "\n";
+            << std::setw(labelWidth) << "FirstThunk:" << std::hex << std::setw(8) << std::setfill(' ') << descriptor->FirstThunk;
 
         std::cout << ss.str();
     }
